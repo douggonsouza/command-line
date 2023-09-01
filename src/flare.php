@@ -1,5 +1,6 @@
 <?php
 
+namespace douggonsouza\command_line;
 /*
 
 // ADICIONAR AO INI.INC.PHP
