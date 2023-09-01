@@ -9,15 +9,19 @@ class ComposerStaticInit923f7e0300a94a37dc48c516f8bd61e6
     public static $prefixLengthsPsr4 = array (
         'd' => 
         array (
-            'douggonsouza\\command-line\\' => 26,
+            'douggonsouza\\command_line\\' => 26,
         ),
     );
 
     public static $prefixDirsPsr4 = array (
-        'douggonsouza\\command-line\\' => 
+        'douggonsouza\\command_line\\' => 
         array (
             0 => __DIR__ . '/../..' . '/src',
         ),
+    );
+
+    public static $classMap = array (
+        'douggonsouza\\command_line\\flare' => __DIR__ . '/../..' . '/src/flare.php',
     );
 
     public static function getInitializer(ClassLoader $loader)
@@ -25,6 +29,7 @@ class ComposerStaticInit923f7e0300a94a37dc48c516f8bd61e6
         return \Closure::bind(function () use ($loader) {
             $loader->prefixLengthsPsr4 = ComposerStaticInit923f7e0300a94a37dc48c516f8bd61e6::$prefixLengthsPsr4;
             $loader->prefixDirsPsr4 = ComposerStaticInit923f7e0300a94a37dc48c516f8bd61e6::$prefixDirsPsr4;
+            $loader->classMap = ComposerStaticInit923f7e0300a94a37dc48c516f8bd61e6::$classMap;
 
         }, null, ClassLoader::class);
     }

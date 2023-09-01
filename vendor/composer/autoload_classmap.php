@@ -6,4 +6,5 @@ $vendorDir = dirname(dirname(__FILE__));
 $baseDir = dirname($vendorDir);
 
 return array(
+    'douggonsouza\\command_line\\flare' => $baseDir . '/src/flare.php',
 );
