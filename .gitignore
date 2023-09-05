@@ -1,3 +1,4 @@
 # /vendor/
 /.vscode/
 command-line.code-workspace
+/nbproject/

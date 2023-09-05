@@ -1,27 +1,37 @@
 <?php
 
 namespace douggonsouza\command_line;
+
 /*
 
-// ADICIONAR AO INI.INC.PHP
+LINHA DE COMANDO
 
-// walking
-require(__DIR__ . '/flare.inc.php');
-$flare = new flare();
+    ADICIONAR AO INI.INC.PHP
+
+        // walking
+        require(realpath(__DIR__ . '/flare.php'));
+        $flare = new flare();
+
+    EXEMPLO DE USO PARA SCRIPTS
+
+        \cmdl::point(array('test'), 'AAA');
+
+
+TESTES
+
+    CRIAR PASTA DE TESTES
+
+        src/_tst/
 
 */
 
 final class flare
 {
     protected static $protocol;
-
     protected static $index = 1;
-
     protected static $status = array();
-
     // private $callbacks = array();
-
-                
+        
     /**
      * Method __construct
      *
@@ -29,7 +39,7 @@ final class flare
      */
     public function __construct()
     {
-        class_alias(get_class($this), 'testing');
+        class_alias(get_class($this), 'cmdl');
         self::$protocol = rand(100000, 100000000);
         // register_shutdown_function(array($this, 'callRegisteredShutdown'));
     }
@@ -41,28 +51,83 @@ final class flare
             if (!empty($output)) {
                 $sd = $output;
             }
-            $env = array();
-            if (!empty($_ENV) && $propertys === true) {
-                $env = $_ENV;
-            }
-            $global = array();
-            if (!empty($GLOBALS) && $propertys === true) {
-                $global = $GLOBALS;
-            }
+
             echo("\n".date('Y-m-d H:i:s', strtotime('now')). " Protocol: " . self::$protocol . " label: " . $label . self::$index . " usage memory (Bytes): ". memory_get_peak_usage() ."\n");
+
             if (!empty($sd)) {
                 print_r(self::backtrace());
-                        
+                echo("\n".date('Y-m-d H:i:s', strtotime('now'))." >>>>> outputs:\n");
+                print_r($sd);
+
                 if ($propertys) {
                     echo("\n".date('Y-m-d H:i:s', strtotime('now'))." >>>>> propertys:\n");
-                    var_dump(array_merge($global, $env));
+                    print_r(array_merge(self::globals($propertys), self::envs($propertys)));
                 }
-    
-                self::$index++;
-                print_r($sd);
             }
+
+            self::$index++;
             self::follow();
         }
+    }
+        
+    /**
+     * Method envs
+     *
+     * @param $propertys $propertys [explicite description]
+     *
+     * @return void
+     */
+    private static function envs($propertys = false)
+    {
+        $env = array();
+        
+        if ($propertys === false) {
+            return $env;
+        }
+
+        foreach($_ENV as $key => $value){
+            if(is_object($value)){
+                $env[$key] = get_class($value);
+                continue;
+            }
+            if(is_array($value)){
+                $env[$key] = 'array['.count($value).']';
+                continue;
+            }
+            $env[$key] = $value;
+        }
+        
+        return $env;
+    }
+        
+    /**
+     * Method globals
+     *
+     * @param $propertys $propertys [explicite description]
+     *
+     * @return void
+     */
+    private static function globals($propertys = false)
+    {
+        $global = array();
+        
+        if ($propertys === false) {
+            return $global;
+        }
+
+        foreach($GLOBALS as $key => $value){
+            if(is_object($value)){
+                $env[$key] = get_class($value);
+                continue;
+            }
+            if(is_array($value)){
+                $env[$key] = 'array['.count($value).']';
+                continue;
+            }
+            $global[$key] = $value;
+        }
+        
+        return $global;
     }
     
     /**
@@ -103,104 +168,127 @@ final class flare
         }
         return $trace;
     }
- 
-    /**
-     * Method unitTest
-     *
-     * @param $class $class [explicite description]
-     * @param $function $function [explicite description]
-     * @param array $cenario [explicite description]
-     * @param $typeReturn $typeReturn [explicite description]
-     *
-     * @return void
-     * 
-     * 
-     * TYPES:
-     * 
-     * string
-     * inteiro
-     * float
-     * booleano
-     * array
-     * objeto
-     * resource
-     * NULL
-     * unknown type
-     * resource (closed)
-     * exception
-     * 
-     */
     
     /**
-     * Method pod
+     * Method assert_type
      *
-     * @param $closure $closure [explicite description]
-     * @param $typeReturn $typeReturn [explicite description]
+     * @param $param $param [explicite description]
+     * @param $type $type [explicite description]
      *
      * @return void
      * 
-     * $typeReturn:
-     * 
-     * string
-     * inteiro
-     * float
-     * booleano
-     * array
-     * objeto
-     * resource
-     * NULL
-     * unknown type
-     * resource (closed)
-     * exception
+     * $type:   string
+     *          integer
+     *          float
+     *          boolean
+     *          array
+     *          object
+     *          resource
+     *          NULL
+     *          unknown type
+     *          resource (closed)
+     *          exception
      * 
      */
-    public static function pod($closure, $typeReturn = "NULL")
+    public static function assert_type($param, $type = "NULL")
     {
-        $return = gettype($closure);
+        $status = array();
+        $return = gettype($param);
+
         // tipo de retorno
-        if(!((string) $typeReturn === $return)){
-            self::setStatus(sprintf("O tipo de retorno recebido é DIFERENTE (%s) do esperado (%s).", $return, $typeReturn));
+        if(!((string) $type === $return)){
+            $status[] = sprintf("O tipo de retorno recebido é DIFERENTE (%s) do esperado (%s).", $return, $type);
         }
-        self::setStatus(sprintf("O tipo de retorno recebido é IGUAL (%s) ao esperado (%s).", $return, $typeReturn));
-        echo("\n".date('Y-m-d H:i:s', strtotime('now'))." >>> " . implode("; \n", self::getStatus())."\n");
+        $status[] = sprintf("O tipo de retorno recebido é IGUAL (%s) ao esperado (%s).", $return, $type);
+
+        self::setStatus($status);
+
+        // Status
+        echo("\n".date('Y-m-d H:i:s', strtotime('now')). " Protocol: " . self::$protocol . " usage memory (Bytes): ". memory_get_peak_usage());
+        echo("\n".date('Y-m-d H:i:s', strtotime('now'))." >>> STATUS");
+        echo("\n".date('Y-m-d H:i:s', strtotime('now'))." >>> " . implode("; \n", $status)."\n");
+
+        // Continue
         self::follow();
-        return $closure;
+
+        return $param;
     }
 
-        // public function callRegisteredShutdown()
-        // {
-        //     foreach ($this->callbacks as $arguments) {
-        //         $callback = array_shift($arguments);
-        //         call_user_func_array($callback, $arguments);
-        //     }
-        // }
+    /**
+     * Method assert_value
+     *
+     * @param $param $param [explicite description]
+     * @param $condition $condition [explicite description]
+     *
+     * @return void
+     */
+    public static function assert_value($param, $value = NULL)
+    {
+        $status = array();
 
-        // public function registerShutdownEvent()
-        // {
-        //     $callback = func_get_args();
+        // tipo de retorno
+        if(!$param === $value){
+            $status[] = "O valor de retorno recebido é DIFERENTE do esperado.";
+        }
+        $status[] = "O valor de retorno recebido é IGUAL ao esperado.";
 
-        //     if (empty($callback)) {
-        //         trigger_error('No callback passed to '.__FUNCTION__.' method', E_USER_ERROR);
-        //         return false;
-        //     }
-        //     if (!is_callable($callback[0])) {
-        //         trigger_error('Invalid callback passed to the '.__FUNCTION__.' method', E_USER_ERROR);
-        //         return false;
-        //     }
-        //     $this->callbacks[] = $callback;
-        //     return true;
-        // }
+        self::setStatus($status);
 
-        // test methods:
-        // public function dynamicTest()
-        // {
-        //     echo '_REQUEST array is '.count($_REQUEST).' elements long.<br />';
-        // }
+        // Status
+        echo("\n".date('Y-m-d H:i:s', strtotime('now')). " Protocol: " . self::$protocol . " usage memory (Bytes): ". memory_get_peak_usage());
+        echo("\n".date('Y-m-d H:i:s', strtotime('now'))." >>> STATUS");
+        echo("\n".date('Y-m-d H:i:s', strtotime('now'))." >>> " . implode("; \n", $status)."\n");
 
-        // public static function staticTest()
-        // {
-        //     echo '_SERVER array is '.count($_SERVER).' elements long.<br />';
-        // }
+        self::follow();
+
+        return $param;
+    }
+
+    /**
+     * Method assert_env
+     *
+     * @param $condition $condition [explicite description]
+     *
+     * @return void
+     */
+    public static function assert_env($condition = array())
+    {
+        $success = true;
+
+        if(!isset($condition) || empty($condition)){
+            self::setStatus("Não encontrada as CONDIÇÕES de avaliação.");
+            $success = false;
+        }
+
+        if($success){
+            foreach($condition as $key => $value){
+                if(isset($value['type'])){
+                    $sd = sprintf("O tipo da variável %s NÃO É IGUAL (%s) a condição passada (%s).", $key, $value['type'], gettype($_ENV[$key]));
+                    if($value['type'] === gettype($_ENV[$key])){
+                        $sd = sprintf("O tipo da variável %s é IGUAL (%s) a condição passada (%s).", $key, $value['type'], gettype($_ENV[$key]));
+                    }
+                    self::setStatus($sd);
+                }
+
+                if(isset($value['value'])){
+                    $sd = sprintf("O valor da variável %s NÃO É IGUAL (%s) a condição passada (%s).", $key, $value['type'], gettype($_ENV[$key]));
+                    if($value['value'] === $_ENV[$key]){
+                        $sd = sprintf("O valor da variável %s é IGUAL (%s) a condição passada (%s).", $key, $value['type'], gettype($_ENV[$key]));
+                    }
+                    self::setStatus($sd);
+                }
+            }
+        }
+
+        // Status
+        echo("\n".date('Y-m-d H:i:s', strtotime('now'))." >>> STATUS");
+        echo("\n".date('Y-m-d H:i:s', strtotime('now'))." >>> " . implode("; \n", self::getStatus())."\n");
+
+        // Continue
+        self::follow();
+
+        return self;
+    }
 
     /**
      * Get the value of status
