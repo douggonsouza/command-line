@@ -1,7 +1,5 @@
 <?php
 
-namespace douggonsouza\command_line;
-
 /*
 
 LINHA DE COMANDO
@@ -170,10 +168,11 @@ final class flare
     }
     
     /**
-     * Method assert_type
+     * Method assertParam
      *
      * @param $param $param [explicite description]
-     * @param $type $type [explicite description]
+     * @param $type  $type  [explicite description]
+     * @param $value $value [explicite description]
      *
      * @return void
      * 
@@ -189,59 +188,133 @@ final class flare
      *          resource (closed)
      *          exception
      * 
-     */
-    public static function assert_type($param, $type = "NULL")
+     */    
+    public static function assertParam($param, $type = "NULL", $value = NULL)
     {
         $status = array();
-        $return = gettype($param);
+        $getType = gettype($param);
 
         // tipo de retorno
-        if(!((string) $type === $return)){
-            $status[] = sprintf("O tipo de retorno recebido é DIFERENTE (%s) do esperado (%s).", $return, $type);
+        if(!((string) $type === $getType)){
+            self::setStatus(sprintf(
+                "ERROR. TIPO de retorno recebido DIFERENTE (%s) do esperado (%s).", 
+                $getType, 
+                $type
+            ));
         }
-        $status[] = sprintf("O tipo de retorno recebido é IGUAL (%s) ao esperado (%s).", $return, $type);
+        else{
+            self::setStatus(sprintf(
+                "OK.    TIPO de retorno recebido IGUAL (%s) ao esperado (%s).", 
+                $getType, 
+                $type
+            )); 
+        }
 
-        self::setStatus($status);
+        // tipo de retorno
+        if(!($param === $value)){
+            self::setStatus(sprintf(
+                "ERROR. VALOR de retorno recebido (%s) DIFERENTE do esperado (%s).", 
+                $param, 
+                $value
+            ));
+        }
+        else{
+            self::setStatus(sprintf(
+                "OK.        VALOR de retorno recebido (%s) IGUAL ao esperado (%s).", 
+                $param, 
+                $value
+            ));
+        }
 
         // Status
-        echo("\n".date('Y-m-d H:i:s', strtotime('now')). " Protocol: " . self::$protocol . " usage memory (Bytes): ". memory_get_peak_usage());
-        echo("\n".date('Y-m-d H:i:s', strtotime('now'))." >>> STATUS");
-        echo("\n".date('Y-m-d H:i:s', strtotime('now'))." >>> " . implode("; \n", $status)."\n");
+        echo("\n".date('Y-m-d H:i:s', strtotime('now'))." >>>");
+        echo("\n".date('Y-m-d H:i:s', strtotime('now')). " >>> Protocol: " . self::$protocol . " usage memory (Bytes): ". memory_get_peak_usage());
+        echo("\n".date('Y-m-d H:i:s', strtotime('now'))." >>>");
+        echo("\n".date('Y-m-d H:i:s', strtotime('now'))." >>> [ASSERT PARAM]");
+        foreach(self::getStatus() as $item){
+            echo("\n".date('Y-m-d H:i:s', strtotime('now'))." >>> " . $item);
+        }
+        echo("\n");
 
-        // Continue
         self::follow();
 
         return $param;
     }
-
+        
     /**
-     * Method assert_value
+     * Method assertFlux
      *
-     * @param $param $param [explicite description]
-     * @param $condition $condition [explicite description]
+     * @param array $flux [explicite description]
      *
      * @return void
      */
-    public static function assert_value($param, $value = NULL)
+    public static function assertFlux(array $fluxs = array())
     {
-        $status = array();
+        $flux = $existing = null;
+        $arrayFlux = $arrayExisting = array_reverse(debug_backtrace());
+        $fluxExisting = array();
 
-        // tipo de retorno
-        if(!$param === $value){
-            $status[] = "O valor de retorno recebido é DIFERENTE do esperado.";
+        echo("\n".date('Y-m-d H:i:s', strtotime('now'))." >>> [FLUX]");
+        foreach($arrayFlux as $key => $row){
+            echo(
+                "\n".date('Y-m-d H:i:s', strtotime('now')). " >>> " . $row['class']. $row['type'] . $row['function'] . '():' . $row['line']
+            );            
         }
-        $status[] = "O valor de retorno recebido é IGUAL ao esperado.";
 
-        self::setStatus($status);
+        foreach($fluxs as $row){
+            foreach($arrayExisting as $index => $trace){
+                $function = $trace['class']. $trace['type'] . $trace['function'];
+                if($function === $row){
+                    $fluxExisting[] = array($row, $index);
+                    $existing = $row;
+                    break;
+                }
+            }
 
+            if(!is_null($existing)){
+                self::setStatus(sprintf(
+                    "OK.        A FUNÇÃO %s EXISTE no fluxo de chamadas.", 
+                    $row
+                ));
+            }
+            else{
+                self::setStatus(sprintf(
+                    "ERROR. A FUNÇÃO %s NÃO existe no fluxo de chamadas.", 
+                    $row
+                ));
+            }           
+        }
+
+        if(count($fluxExisting) == count($fluxs)){
+            $indexAnterior = 0;
+            foreach($fluxExisting as $row){
+                if((int) $indexAnterior >= (int) $row[1]){
+                    self::setStatus("ERROR. O FLUXO NÃO é sequêncial.");
+                    break; 
+                }
+                $indexAnterior = $row[1];
+            }
+            self::setStatus("OK.        O FLUXO É sequêncial.");
+        }
+        else{
+            if(!is_null($existing)){
+                self::setStatus("ERROR. O FLUXO NÃO está completo.");
+            }
+        }
+        
         // Status
-        echo("\n".date('Y-m-d H:i:s', strtotime('now')). " Protocol: " . self::$protocol . " usage memory (Bytes): ". memory_get_peak_usage());
-        echo("\n".date('Y-m-d H:i:s', strtotime('now'))." >>> STATUS");
-        echo("\n".date('Y-m-d H:i:s', strtotime('now'))." >>> " . implode("; \n", $status)."\n");
+        echo("\n".date('Y-m-d H:i:s', strtotime('now'))." >>>");
+        echo("\n".date('Y-m-d H:i:s', strtotime('now')). " >>> Protocol: " . self::$protocol . " usage memory (Bytes): ". memory_get_peak_usage());
+        echo("\n".date('Y-m-d H:i:s', strtotime('now'))." >>>");
+        echo("\n".date('Y-m-d H:i:s', strtotime('now'))." >>> [ASSERT FLUX]");
+        foreach(self::getStatus() as $item){
+            echo("\n".date('Y-m-d H:i:s', strtotime('now'))." >>> " . $item);
+        }
+        echo("\n");
 
         self::follow();
 
-        return $param;
+        return;
     }
 
     /**
