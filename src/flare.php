@@ -204,7 +204,7 @@ final class flare
         }
         else{
             self::setStatus(sprintf(
-                "OK.    TIPO de retorno recebido IGUAL (%s) ao esperado (%s).", 
+                "OK. TIPO de retorno recebido IGUAL (%s) ao esperado (%s).", 
                 $getType, 
                 $type
             )); 
@@ -220,14 +220,13 @@ final class flare
         }
         else{
             self::setStatus(sprintf(
-                "OK.        VALOR de retorno recebido (%s) IGUAL ao esperado (%s).", 
+                "OK. VALOR de retorno recebido (%s) IGUAL ao esperado (%s).", 
                 $param, 
                 $value
             ));
         }
 
         // Status
-        echo("\n".date('Y-m-d H:i:s', strtotime('now'))." >>>");
         echo("\n".date('Y-m-d H:i:s', strtotime('now')). " >>> Protocol: " . self::$protocol . " usage memory (Bytes): ". memory_get_peak_usage());
         echo("\n".date('Y-m-d H:i:s', strtotime('now'))." >>>");
         echo("\n".date('Y-m-d H:i:s', strtotime('now'))." >>> [ASSERT PARAM]");
@@ -237,6 +236,8 @@ final class flare
         echo("\n");
 
         self::follow();
+
+        self::$status = array();
 
         return $param;
     }
@@ -254,6 +255,8 @@ final class flare
         $arrayFlux = $arrayExisting = array_reverse(debug_backtrace());
         $fluxExisting = array();
 
+        echo("\n".date('Y-m-d H:i:s', strtotime('now')). " >>> Protocol: " . self::$protocol . " usage memory (Bytes): ". memory_get_peak_usage());
+        echo("\n".date('Y-m-d H:i:s', strtotime('now'))." >>>");
         echo("\n".date('Y-m-d H:i:s', strtotime('now'))." >>> [FLUX]");
         foreach($arrayFlux as $key => $row){
             echo(
@@ -273,13 +276,13 @@ final class flare
 
             if(!is_null($existing)){
                 self::setStatus(sprintf(
-                    "OK.        A FUNÇÃO %s EXISTE no fluxo de chamadas.", 
+                    "OK. A chamada %s EXISTE no fluxo.", 
                     $row
                 ));
             }
             else{
                 self::setStatus(sprintf(
-                    "ERROR. A FUNÇÃO %s NÃO existe no fluxo de chamadas.", 
+                    "ERROR. A chamada %s NÃO existe no fluxo.", 
                     $row
                 ));
             }           
@@ -287,14 +290,19 @@ final class flare
 
         if(count($fluxExisting) == count($fluxs)){
             $indexAnterior = 0;
+            $success = true;
             foreach($fluxExisting as $row){
                 if((int) $indexAnterior >= (int) $row[1]){
-                    self::setStatus("ERROR. O FLUXO NÃO é sequêncial.");
+                    self::setStatus("ERROR. O FLUXO NÃO está conforme a ordem sequêncial.");
+                    $success = false;
                     break; 
                 }
                 $indexAnterior = $row[1];
             }
-            self::setStatus("OK.        O FLUXO É sequêncial.");
+
+            if($success){
+                self::setStatus("OK. O FLUXO está conforme a ordem sequêncial.");
+            }
         }
         else{
             if(!is_null($existing)){
@@ -304,8 +312,6 @@ final class flare
         
         // Status
         echo("\n".date('Y-m-d H:i:s', strtotime('now'))." >>>");
-        echo("\n".date('Y-m-d H:i:s', strtotime('now')). " >>> Protocol: " . self::$protocol . " usage memory (Bytes): ". memory_get_peak_usage());
-        echo("\n".date('Y-m-d H:i:s', strtotime('now'))." >>>");
         echo("\n".date('Y-m-d H:i:s', strtotime('now'))." >>> [ASSERT FLUX]");
         foreach(self::getStatus() as $item){
             echo("\n".date('Y-m-d H:i:s', strtotime('now'))." >>> " . $item);
@@ -313,6 +319,8 @@ final class flare
         echo("\n");
 
         self::follow();
+
+        self::$status = array();
 
         return;
     }
@@ -329,24 +337,24 @@ final class flare
         $success = true;
 
         if(!isset($condition) || empty($condition)){
-            self::setStatus("Não encontrada as CONDIÇÕES de avaliação.");
+            self::setStatus("NÃ£o encontrada as CONDIÃ‡Ã•ES de avaliaÃ§Ã£o.");
             $success = false;
         }
 
         if($success){
             foreach($condition as $key => $value){
                 if(isset($value['type'])){
-                    $sd = sprintf("O tipo da variável %s NÃO É IGUAL (%s) a condição passada (%s).", $key, $value['type'], gettype($_ENV[$key]));
+                    $sd = sprintf("O tipo da variÃ¡vel %s NÃƒO Ã‰ IGUAL (%s) a condiÃ§Ã£o passada (%s).", $key, $value['type'], gettype($_ENV[$key]));
                     if($value['type'] === gettype($_ENV[$key])){
-                        $sd = sprintf("O tipo da variável %s é IGUAL (%s) a condição passada (%s).", $key, $value['type'], gettype($_ENV[$key]));
+                        $sd = sprintf("O tipo da variÃ¡vel %s Ã© IGUAL (%s) a condiÃ§Ã£o passada (%s).", $key, $value['type'], gettype($_ENV[$key]));
                     }
                     self::setStatus($sd);
                 }
 
                 if(isset($value['value'])){
-                    $sd = sprintf("O valor da variável %s NÃO É IGUAL (%s) a condição passada (%s).", $key, $value['type'], gettype($_ENV[$key]));
+                    $sd = sprintf("O valor da variÃ¡vel %s NÃƒO Ã‰ IGUAL (%s) a condiÃ§Ã£o passada (%s).", $key, $value['type'], gettype($_ENV[$key]));
                     if($value['value'] === $_ENV[$key]){
-                        $sd = sprintf("O valor da variável %s é IGUAL (%s) a condição passada (%s).", $key, $value['type'], gettype($_ENV[$key]));
+                        $sd = sprintf("O valor da variÃ¡vel %s Ã© IGUAL (%s) a condiÃ§Ã£o passada (%s).", $key, $value['type'], gettype($_ENV[$key]));
                     }
                     self::setStatus($sd);
                 }
